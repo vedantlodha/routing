@@ -4,6 +4,7 @@ import requests
 import json
 import urllib
 from urllib.request import urlopen
+import config
 
 def create_data_matrix(locations):
     number_of_locations = len(locations)
@@ -19,12 +20,12 @@ def create_data_matrix(locations):
         distance_matrix = build_distance_matrix(URL)
         data_matrix += distance_matrix
     if r > 0 :
-        
+
         origins_array = locations[q*max_rows : q * max_rows + r]
         URL = build_url(locations, origins_array, destinations_array)
         distance_matrix = build_distance_matrix(URL)
         data_matrix += distance_matrix
-    
+
     return data_matrix
 
 def build_url(locations, origins_array, destinations_array):
@@ -33,16 +34,16 @@ def build_url(locations, origins_array, destinations_array):
     origins = ''
     #build oigin string
     for i in origins_array:
-        origins += str(i[0]) + ',' + str(i[1])
+        origins += str(i[1]) + ',' + str(i[2])
         if i != origins_array[-1]:
             origins += '|'
     #build destination string
     for i in destinations_array:
-        destinations += str(i[0]) + ',' + str(i[1])
+        destinations += str(i[1]) + ',' + str(i[2])
         if i != destinations_array[-1]:
             destinations += '|'
-    
-    api_key = 'AIzaSyA0fBuKW5FDEUJFMUCiZAv_zgXAon8gSgI'
+
+    api_key = config.api_key
     URL += 'origins=' + origins + '&destinations=' + destinations + '&key=' + api_key
     return URL
 
@@ -50,13 +51,15 @@ def build_url(locations, origins_array, destinations_array):
 def build_distance_matrix(URL):
     response = requests.get(URL)
     response_json = response.json()
+    print(response.text)
 
     #computation of distance matrix
     distance_matrix = []
+    print(response.text)
     for rows in response_json['rows']:
         row_list = [rows['elements'][j]['distance']['value'] for j in range(len(rows['elements']))]
         distance_matrix.append(row_list)
-    
+
     #Scaling down distance matrix because of or-tools distance constraints
     for i in range(len(distance_matrix)):
         for j in range(len(distance_matrix[i])):
@@ -86,10 +89,10 @@ def no_empty_routes(data, routing):
 def solver(data,no_empty_vehicles=False):
     # Create the routing index manager.
     manager = pywrapcp.RoutingIndexManager(
-        len(data['distance_matrix']), 
-        data['num_vehicles'], 
+        len(data['distance_matrix']),
+        data['num_vehicles'],
         data['depot'])
-    
+
     # Create Routing Model.
     routing = pywrapcp.RoutingModel(manager)
 
@@ -100,7 +103,7 @@ def solver(data,no_empty_vehicles=False):
         from_node = manager.IndexToNode(from_index)
         to_node = manager.IndexToNode(to_index)
         return data['distance_matrix'][from_node][to_node]
-    
+
     transit_callback_index = routing.RegisterTransitCallback(distance_callback)
     # Define cost of each arc.
     routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
@@ -133,4 +136,3 @@ def solver(data,no_empty_vehicles=False):
     # Create a solver
     solution = routing.SolveWithParameters(search_parameters)
     return manager, routing, solution
-
