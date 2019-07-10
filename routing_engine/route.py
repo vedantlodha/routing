@@ -4,8 +4,7 @@ import requests
 import json
 import urllib
 from urllib.request import urlopen
-import config
-
+import routing_engine.config
 def create_data_matrix(locations):
     number_of_locations = len(locations)
     #Distance Matrix API allows only 100 locations per call
@@ -43,7 +42,7 @@ def build_url(locations, origins_array, destinations_array):
         if i != destinations_array[-1]:
             destinations += '|'
 
-    api_key = config.api_key
+    api_key = routing_engine.config.api_key
     URL += 'origins=' + origins + '&destinations=' + destinations + '&key=' + api_key
     return URL
 
@@ -68,12 +67,12 @@ def build_distance_matrix(URL):
 
 
 
-def create_data_model(locations, num_vehicles):
+def create_data_model(locations, depots):
     """Stores the data for the problem."""
     data = {}
     data['distance_matrix'] = create_data_matrix(locations)
-    data['num_vehicles'] = num_vehicles
-    data['depot'] = 0
+    data['num_vehicles'] = len(depots)
+    data['depots'] = depots
     return data
 
 
@@ -91,7 +90,7 @@ def solver(data,no_empty_vehicles=False):
     manager = pywrapcp.RoutingIndexManager(
         len(data['distance_matrix']),
         data['num_vehicles'],
-        data['depot'])
+        data['depots'], data['depots'])
 
     # Create Routing Model.
     routing = pywrapcp.RoutingModel(manager)

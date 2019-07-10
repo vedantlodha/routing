@@ -59,7 +59,7 @@ def routes_callback(data,manager, routing, solution):
 
 
 def main():
-    data = create_data_model(get_locations(), 3)
+    data = create_data_model(get_locations(), [0,7,3])
     manager, routing, solution = solver(data)
     if solution :
         print(routes_callback(data,manager, routing, solution))
