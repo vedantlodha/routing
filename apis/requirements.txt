@@ -9,7 +9,7 @@ Jinja2==2.10.1
 MarkupSafe==1.1.1
 ortools==7.1.6720
 post==2019.4.13
-protobuf==3.8.0
+protobuf==3.18.3
 public==2019.4.13
 query-string==2019.4.13
 requests==2.22.0
